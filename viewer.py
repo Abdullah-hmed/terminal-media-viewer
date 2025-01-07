@@ -67,7 +67,7 @@ def main():
     args = parser.parse_args()
 
     try:
-        if args.input_path.endswith('.gif') or args.input_path.endswith('.mp4'):
+        if args.input_path.endswith(('.mp4', '.gif', '.webm', '.mov')):
             video_to_unicode(args.input_path, width=args.width)
         else:
             img = Image.open(args.input_path)
