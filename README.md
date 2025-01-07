@@ -6,8 +6,8 @@ To install the terminal-media-viewer package, run the following commands:
 Clone the repository
 
 ```bash
-git clone https://github.com/Abdullah-hmed/glitch-text.git
-cd glitch-text
+git clone https://github.com/Abdullah-hmed/terminal-media-viewer.git
+cd terminal-media-viewer
 ```
 Install the package locally:
 
