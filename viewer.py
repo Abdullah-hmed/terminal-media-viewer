@@ -59,16 +59,15 @@ def progress_bar(current, total, bar_length):
     if current == total:
         print()
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(description='Convert an image or video to UNICODE art.')
     parser.add_argument('input_path', type=str, help='Path to the image or video file')
     parser.add_argument('-w', '--width', type=int, default=60, help='Width of the ASCII art (default: 60)')
-    parser.add_argument('-v', '--video', action='store_true', help='Input is a video file')
 
     args = parser.parse_args()
 
     try:
-        if args.video:
+        if args.input_path.endswith('.gif') or args.input_path.endswith('.mp4'):
             video_to_unicode(args.input_path, width=args.width)
         else:
             img = Image.open(args.input_path)
@@ -79,3 +78,6 @@ if __name__ == "__main__":
         print(f"Error: File '{args.input_path}' not found.")
     except ValueError:
         print(f"Error: Invalid width value '{args.width}'. Please provide a positive integer.")
+
+if __name__ == "__main__":
+    main()
