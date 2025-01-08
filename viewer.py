@@ -3,6 +3,7 @@ import os, time, shutil
 import numpy as np
 import imageio as iio
 import argparse
+import sys
 
 
 ascii_chars = ' ▁▂▃▄▅▆▇█'
@@ -34,21 +35,34 @@ def image_to_unicode(frame, new_width=80):
 
 def video_to_unicode(video_path, width=80, frame_rate=24):
     
-    
+    sys.stdout.write('\033[?25l')  # Hide the cursor
+
     video_reader = iio.get_reader(video_path)
     if not video_path.endswith('.gif'):
         frame_count = video_reader.count_frames()
     
     current_frame = 1
+    first_frame = True
     for frame in video_reader:
+        
         unicode_frame = image_to_unicode(frame, new_width=width)
         
-        os.system('cls' if os.name == 'nt' else 'clear')
-        print('\r', unicode_frame, end='', flush=True)
+        if first_frame:
+            sys.stdout.write('\033[s')  # Save position
+            print(unicode_frame, end='', flush=True)
+            first_frame = False
+        else: 
+            sys.stdout.write('\033[u')  # Getting to initial position
+            print(unicode_frame, end='', flush=True)
+        
+        
         if not video_path.endswith('.gif'):
             progress_bar(current_frame, frame_count, width)
         current_frame += 1
         time.sleep(1 / frame_rate)
+        
+    sys.stdout.write('\033[?25h') # Show cursor again
+
 
 def progress_bar(current, total, bar_length):
     bar_length = int(bar_length) - 10
