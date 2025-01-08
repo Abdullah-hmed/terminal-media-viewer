@@ -4,9 +4,14 @@ import numpy as np
 import imageio as iio
 import argparse
 import sys
+import signal
 
 
 ascii_chars = ' ▁▂▃▄▅▆▇█'
+
+def handleSignal(signum, frame):
+    sys.stdout.write('\033[?25h') # Show cursor again
+    sys.exit(0)
 
 def image_to_unicode(frame, new_width=80):
     
@@ -48,6 +53,7 @@ def video_to_unicode(video_path, width=80, frame_rate=24):
         unicode_frame = image_to_unicode(frame, new_width=width)
         
         if first_frame:
+            os.system('cls' if os.name == 'nt' else 'clear')
             sys.stdout.write('\033[s')  # Save position
             print(unicode_frame, end='', flush=True)
             first_frame = False
@@ -74,6 +80,9 @@ def progress_bar(current, total, bar_length):
         print()
 
 def main():
+    
+    signal.signal(signal.SIGINT, handleSignal)
+
     parser = argparse.ArgumentParser(description='Convert an image or video to UNICODE art.')
     parser.add_argument('input_path', type=str, help='Path to the image or video file')
     parser.add_argument('-w', '--width', type=int, default=60, help='Width of the ASCII art (default: 60)')
