@@ -12,6 +12,7 @@ setup(
     install_requires=[
         'Pillow',
         'imageio',
+        'imageio-ffmpeg',
         'numpy',
         'argparse',
     ],
