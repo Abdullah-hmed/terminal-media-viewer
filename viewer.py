@@ -26,7 +26,7 @@ def image_to_unicode(frame, new_width=80):
         new_width = terminal_width
     new_height = int(new_width * aspect_ratio * 0.55)
     if new_height > terminal_height:
-        new_height = terminal_height
+        new_height = terminal_height - 1 # Subtracting 1 for the progress bar
         new_width = int(new_height / (aspect_ratio * 0.55))
     resized_img = img.resize((new_width, new_height))
 
