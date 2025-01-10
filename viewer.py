@@ -129,7 +129,11 @@ def main():
         else:
             img = Image.open(args.input_path)
             frame = np.array(img)
-            ascii_art = image_to_unicode(frame, args.width)
+            colored = not args.grayscale
+            if colored:
+                ascii_art = image_to_unicode(frame, args.width)
+            else:
+                ascii_art = colored_image_to_unicode(frame, args.width)
             print(ascii_art)
     except FileNotFoundError:
         print(f"Error: File '{args.input_path}' not found.")
