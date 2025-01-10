@@ -38,7 +38,35 @@ def image_to_unicode(frame, new_width=80):
     ascii_img = '\n'.join([ascii_str[i:i+new_width] for i in range(0, len(ascii_str), new_width)])
     return ascii_img
 
-def video_to_unicode(video_path, width=80, frame_rate=24):
+def colored_image_to_unicode(frame, new_width=80):
+    
+    img = Image.fromarray(frame).convert("RGB")
+    terminal_width, terminal_height = shutil.get_terminal_size()
+
+    # Resize image to fit terminal dimensions
+    width, height = img.size
+    aspect_ratio = height / width
+    if new_width is None:
+        new_width = terminal_width
+    new_height = int(new_width * aspect_ratio * 0.55)
+    if new_height > terminal_height:
+        new_height = terminal_height - 2 # Subtracting 2 for the progress bar
+        new_width = int(new_height / (aspect_ratio * 0.55))
+    resized_img = img.resize((new_width, new_height))
+    
+    result = []
+    for y in range(new_height):
+        for x in range(new_width):
+            pixel = resized_img.getpixel((x,y))
+            values = pixel
+            result.append(rgb_pixel(*values))
+        result.append('\n')
+    return ''.join(result)
+
+def rgb_pixel(r, g, b):
+    return f"\033[38;2;{r};{g};{b}m█\033[0m"
+
+def video_to_unicode(video_path, width=80, frame_rate=24, colored=True):
     
     sys.stdout.write('\033[?25l')  # Hide the cursor
 
@@ -50,7 +78,12 @@ def video_to_unicode(video_path, width=80, frame_rate=24):
     first_frame = True
     for frame in video_reader:
         
-        unicode_frame = image_to_unicode(frame, new_width=width)
+        # Color the image if needed
+        if colored:
+            unicode_frame = colored_image_to_unicode(frame, new_width=width)
+        else:
+            unicode_frame = image_to_unicode(frame, new_width=width)
+        
         
         if first_frame:
             os.system('cls' if os.name == 'nt' else 'clear')
@@ -86,12 +119,13 @@ def main():
     parser = argparse.ArgumentParser(description='Convert an image or video to UNICODE art.')
     parser.add_argument('input_path', type=str, help='Path to the image or video file')
     parser.add_argument('-w', '--width', type=int, default=60, help='Width of the ASCII art (default: 60)')
+    parser.add_argument('-gray', '--grayscale', action='store_false', help='Color the image')
 
     args = parser.parse_args()
 
     try:
-        if args.input_path.endswith(('.mp4', '.gif', '.webm', '.mov')):
-            video_to_unicode(args.input_path, width=args.width)
+        if args.input_path.endswith(('.mp4', '.gif', '.webm', '.mov', 'mkv')):
+            video_to_unicode(args.input_path, width=args.width, colored=args.grayscale)
         else:
             img = Image.open(args.input_path)
             frame = np.array(img)
