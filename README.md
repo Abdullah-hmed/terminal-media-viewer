@@ -22,11 +22,26 @@ mediaviewer <media_file>
 ```
 Replace <media_file> with the path to the media file you want to view.
 
+# Arguments
+
+| Argument | Description |
+|----------|-------------|
+| -w, --width | Width of the ASCII art (default: 80) |
+| -gray, --grayscale | Color the image (default: false) |
+
+
 # Example
 To view a video file called example.mp4, run the following command:
 
 ```bash
-mediaviewer example.mp4
+mediaviewer example.mp4 # Will play the video in the terminal in color
+```
+With Arguments:
+
+```bash
+mediaviewer -w 100 example.mp4  # Will set video width to 100
+mediaviewer -gray example.mp4   # Will play the video in the terminal using unicode blocks
 ```
 
-This will display the video in the terminal as Unicode/ASCII art.
+# License
+This project is released under the [MIT License](https://choosealicense.com/licenses/mit/).
