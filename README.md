@@ -27,7 +27,7 @@ Replace <media_file> with the path to the media file you want to view.
 | Argument | Description |
 |----------|-------------|
 | -w, --width | Width of the ASCII art (default: 80) |
-| -gray, --grayscale | Color the image (default: false) |
+| -bw, --black-white | Color the image (default: false) |
 
 
 # Example

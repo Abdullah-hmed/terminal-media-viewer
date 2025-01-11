@@ -119,7 +119,7 @@ def main():
     parser = argparse.ArgumentParser(description='Convert an image or video to UNICODE art.')
     parser.add_argument('input_path', type=str, help='Path to the image or video file')
     parser.add_argument('-w', '--width', type=int, default=60, help='Width of the ASCII art (default: 60)')
-    parser.add_argument('-gray', '--grayscale', action='store_false', help='Color the image')
+    parser.add_argument('-bw', '--black-white', dest='grayscale', action='store_false', help='Color the image')
 
     args = parser.parse_args()
 
