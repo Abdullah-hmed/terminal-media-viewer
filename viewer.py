@@ -15,11 +15,11 @@ def handleSignal(signum, frame):
     sys.stdout.write('\033[?25h') # Show cursor again
     sys.exit(0)
 
-def image_to_unicode(frame, colored, new_width=80):
+def image_to_unicode(frame, colored=True, new_width=80):
     
     terminal_width, terminal_height = shutil.get_terminal_size()
     
-    img = Image.fromarray(frame).convert("L")
+    img = Image.fromarray(frame).convert("RGB") if colored else Image.fromarray(frame).convert("L")
     
     offset = 1 if not colored else 2
 
@@ -39,13 +39,11 @@ def image_to_unicode(frame, colored, new_width=80):
         result = []
         for y in range(new_height):
             for x in range(new_width):
-                pixel = resized_img.getpixel((x,y))
-                values = pixel
-                result.append(rgb_pixel(*values))
+                result.append(rgb_pixel(*resized_img.getpixel((x,y))))
             result.append('\n')
-            return ''.join(result)
+        return ''.join(result)
     else:
-    # If not colored, map pixels to simple unicode array
+        # If not colored, map pixels to simple unicode array
         pixels = resized_img.getdata()
         ascii_str = ''.join([ascii_chars[pixel // 32] for pixel in pixels])
 
@@ -56,7 +54,7 @@ def image_to_unicode(frame, colored, new_width=80):
 def rgb_pixel(r, g, b):
     return f"\033[38;2;{r};{g};{b}m█\033[0m"
 
-def high_res_image_to_unicode(frame, high_resolution, new_width=80):
+def high_res_image_to_unicode(frame, new_width=80):
     img = Image.fromarray(frame).convert("RGB")
     terminal_width, terminal_height = shutil.get_terminal_size()
 
@@ -82,12 +80,12 @@ def high_res_image_to_unicode(frame, high_resolution, new_width=80):
             result.append(high_res_rgb_pixels(top_pixel, bottom_pixel))
         result.append('\n')
     
-    print(''.join(result))
+    return ''.join(result)
 
 def high_res_rgb_pixels(upper_pixel, lower_pixel):
     return f"\033[38;2;{upper_pixel[0]};{upper_pixel[1]};{upper_pixel[2]}m\033[48;2;{lower_pixel[0]};{lower_pixel[1]};{lower_pixel[2]}m▀\033[0m"
 
-def video_to_unicode(video_path, width=80, frame_rate=24, colored=True):
+def video_to_unicode(video_path, width=80, frame_rate=24, colored=True, high_resolution=False):
     
     sys.stdout.write('\033[?25l')  # Hide the cursor
 
@@ -99,11 +97,12 @@ def video_to_unicode(video_path, width=80, frame_rate=24, colored=True):
     first_frame = True
     for frame in video_reader:
         
-        # Color the image if needed
+        
         if colored:
-            unicode_frame = colored_image_to_unicode(frame, new_width=width)
+            # If colored, map pixels to colored unicode
+            unicode_frame = high_res_image_to_unicode(frame, new_width=width) if high_resolution else image_to_unicode(frame, colored=True, new_width=width)
         else:
-            unicode_frame = image_to_unicode(frame, colored, new_width=width)
+            unicode_frame = image_to_unicode(frame, colored=False, new_width=width)
         
         
         if first_frame:
@@ -148,15 +147,20 @@ def main():
     try:
         colored = not args.grayscale
         high_res = args.high_resolution
-        if colored and high_res:
+        if args.grayscale and args.high_resolution:
             print("Error: High resolution rendering is not compatible with grayscale mode.")
             sys.exit(1)
         elif args.input_path.endswith(('.mp4', '.gif', '.webm', '.mov', 'mkv')):
-            video_to_unicode(args.input_path, colored=colored, width=args.width)
-        else:
+            # Video
+            if high_res:
+                video_to_unicode(args.input_path, colored=colored, width=args.width, high_resolution=True)
+            else:
+                video_to_unicode(args.input_path, colored=colored, width=args.width, high_resolution=False)
+        else: 
+            # Image
             img = Image.open(args.input_path)
             frame = np.array(img)
-            ascii_art = image_to_unicode(frame, colored, args.width)
+            ascii_art = high_res_image_to_unicode(frame, args.width) if high_res else image_to_unicode(frame, colored, args.width)
             print(ascii_art)
     except FileNotFoundError:
         print(f"Error: File '{args.input_path}' not found.")
