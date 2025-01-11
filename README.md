@@ -40,7 +40,7 @@ With Arguments:
 
 ```bash
 mediaviewer -w 100 example.mp4  # Will set video width to 100
-mediaviewer -gray example.mp4   # Will play the video in the terminal using unicode blocks
+mediaviewer -bw example.mp4   # Will play the video in the terminal using unicode blocks
 ```
 
 # License
