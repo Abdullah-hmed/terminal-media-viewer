@@ -28,6 +28,7 @@ Replace <media_file> with the path to the media file you want to view.
 |----------|-------------|
 | -w, --width | Width of the ASCII art (default: 80) |
 | -bw, --black-white | Color the image (default: false) |
+| -hr, --high-resolution | High resolution rendering (default: false) |
 
 
 # Example
@@ -41,6 +42,7 @@ With Arguments:
 ```bash
 mediaviewer -w 100 example.mp4  # Will set video width to 100
 mediaviewer -bw example.mp4   # Will play the video in the terminal using unicode blocks
+mediaviewer -hr example.mp4   # Will play the video in the terminal in high resolution
 ```
 
 # License
