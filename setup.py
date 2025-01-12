@@ -16,6 +16,7 @@ setup(
         'numpy',
         'argparse',
         'opencv-python',
+        'yt-dlp'
     ],
     author="Abdullah Ahmed",
     description="python script to view media files in terminal as unicode/ascii art",
