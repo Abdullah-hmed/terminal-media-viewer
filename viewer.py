@@ -5,6 +5,7 @@ import imageio as iio
 import argparse
 import sys
 import signal
+import urllib.request
 
 
 ascii_chars = ' ▁▂▃▄▅▆▇█'
@@ -131,6 +132,14 @@ def progress_bar(current, total, bar_length, play_icon='▎▎'):
     if current == total:
         print()
 
+def handle_online_image(url, width, colored, high_res):
+    
+    urllib.request.urlretrieve(url, "online_image")
+    img = Image.open("online_image")
+    frame = np.array(img)
+    ascii_art = high_res_image_to_unicode(frame, width) if high_res else image_to_unicode(frame, colored, width)
+    os.remove("online_image")
+    return ascii_art
 def main():
     
     signal.signal(signal.SIGINT, handleSignal)
@@ -149,9 +158,16 @@ def main():
         if args.grayscale and args.high_resolution:
             print("Error: High resolution rendering is not compatible with grayscale mode.")
             sys.exit(1)
+
         elif args.input_path.endswith(('.mp4', '.gif', '.webm', '.mov', 'mkv')):
             # Video
             video_to_unicode(args.input_path, colored=colored, width=args.width, high_resolution=high_res)
+
+        elif args.input_path.startswith('http://') or args.input_path.startswith('https://'):
+            # URL
+            if args.input_path.endswith(tuple(Image.registered_extensions().keys())):
+                image = handle_online_image(args.input_path, args.width, colored, high_res)
+                print(image)
         else: 
             # Image
             img = Image.open(args.input_path)
