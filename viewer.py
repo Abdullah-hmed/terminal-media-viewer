@@ -9,7 +9,6 @@ import signal
 
 ascii_chars = ' ▁▂▃▄▅▆▇█'
 media_playing = True
-play_icon = '▎▎' if media_playing else '▶'
 
 def handleSignal(signum, frame):
     sys.stdout.write('\033[?25h') # Show cursor again
@@ -116,14 +115,14 @@ def video_to_unicode(video_path, width=80, frame_rate=24, colored=True, high_res
         
         
         if not video_path.endswith('.gif'):
-            progress_bar(current_frame, frame_count, width)
+            progress_bar(current_frame, frame_count, width, play_icon='▎▎')
         current_frame += 1
         time.sleep(1 / frame_rate)
         
     sys.stdout.write('\033[?25h') # Show cursor again
 
 
-def progress_bar(current, total, bar_length):
+def progress_bar(current, total, bar_length, play_icon='▎▎'):
     bar_length = int(bar_length) - 10
     filled_length = int(round(bar_length * current / float(total)))
     bar = '█' * filled_length + '-' * (bar_length - filled_length)
@@ -152,10 +151,7 @@ def main():
             sys.exit(1)
         elif args.input_path.endswith(('.mp4', '.gif', '.webm', '.mov', 'mkv')):
             # Video
-            if high_res:
-                video_to_unicode(args.input_path, colored=colored, width=args.width, high_resolution=True)
-            else:
-                video_to_unicode(args.input_path, colored=colored, width=args.width, high_resolution=False)
+            video_to_unicode(args.input_path, colored=colored, width=args.width, high_resolution=high_res)
         else: 
             # Image
             img = Image.open(args.input_path)
