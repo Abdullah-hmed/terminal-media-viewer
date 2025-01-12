@@ -5,6 +5,7 @@ import imageio as iio
 import argparse
 import sys
 import signal
+import cv2
 import urllib.request
 
 
@@ -122,6 +123,56 @@ def video_to_unicode(video_path, width=80, frame_rate=24, colored=True, high_res
         
     sys.stdout.write('\033[?25h') # Show cursor again
 
+def url_to_unicode(url, width=80, frame_rate=24, colored=True, high_resolution=False):
+    
+    sys.stdout.write('\033[?25l')  # Hide the cursor
+
+    # Open the video stream from URL using cv2
+    cap = cv2.VideoCapture(url)
+    
+    if not cap.isOpened():
+        print("Error: Could not open video stream.")
+        return
+    
+    # Get frame count and FPS
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    
+    current_frame = 0
+    first_frame = True
+    
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break  # Break the loop if no frame is read (video ended or error)
+        
+        if colored:
+            unicode_frame = (
+                high_res_image_to_unicode(frame, new_width=width)
+                if high_resolution else
+                image_to_unicode(frame, colored=True, new_width=width)
+            )
+        else:
+            unicode_frame = image_to_unicode(frame, colored=False, new_width=width)
+        
+        if first_frame:
+            os.system('cls' if os.name == 'nt' else 'clear')
+            sys.stdout.write('\033[s')  # Save position
+            print(unicode_frame, end='', flush=True)
+            first_frame = False
+        else:
+            sys.stdout.write('\033[u')  # Restore to initial position
+            print(unicode_frame, end='', flush=True)
+        
+        current_frame += 1
+        progress_bar(current_frame, frame_count, width, play_icon='▎▎')
+        
+        # Sleep to match the desired frame rate
+        time.sleep(1 / frame_count)
+    
+    cap.release()  # Release the video capture object
+    sys.stdout.write('\033[?25h')  # Show the cursor again
+
 
 def progress_bar(current, total, bar_length, play_icon='▎▎'):
     bar_length = int(bar_length) - 10
@@ -155,25 +206,36 @@ def main():
     try:
         colored = not args.grayscale
         high_res = args.high_resolution
+        is_url = args.input_path.startswith('http://') or args.input_path.startswith('https://')
+        is_image = args.input_path.endswith(tuple(Image.registered_extensions().keys()))
         if args.grayscale and args.high_resolution:
             print("Error: High resolution rendering is not compatible with grayscale mode.")
             sys.exit(1)
 
-        elif args.input_path.endswith(('.mp4', '.gif', '.webm', '.mov', 'mkv')):
-            # Video
-            video_to_unicode(args.input_path, colored=colored, width=args.width, high_resolution=high_res)
-
-        elif args.input_path.startswith('http://') or args.input_path.startswith('https://'):
+        elif is_url:
             # URL
-            if args.input_path.endswith(tuple(Image.registered_extensions().keys())):
+            if is_image:
+                
                 image = handle_online_image(args.input_path, args.width, colored, high_res)
                 print(image)
-        else: 
-            # Image
-            img = Image.open(args.input_path)
-            frame = np.array(img)
-            ascii_art = high_res_image_to_unicode(frame, args.width) if high_res else image_to_unicode(frame, colored, args.width)
-            print(ascii_art)
+                
+            else:
+                
+                url_to_unicode(args.input_path, width=args.width, colored=colored, high_resolution=high_res)
+
+        else:
+            # Local file
+            if is_image:
+                
+                img = Image.open(args.input_path)
+                frame = np.array(img)
+                ascii_art = high_res_image_to_unicode(frame, args.width) if high_res else image_to_unicode(frame, colored, args.width)
+                print(ascii_art)
+                
+            else:
+                
+                video_to_unicode(args.input_path, colored=colored, width=args.width, high_resolution=high_res)
+                
     except FileNotFoundError:
         print(f"Error: File '{args.input_path}' not found.")
     except ValueError:
