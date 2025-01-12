@@ -6,6 +6,8 @@ import argparse
 import sys
 import signal
 import cv2
+import yt_dlp
+import re
 import urllib.request
 
 
@@ -146,14 +148,17 @@ def url_to_unicode(url, width=80, frame_rate=24, colored=True, high_resolution=F
         if not ret:
             break  # Break the loop if no frame is read (video ended or error)
         
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        
         if colored:
             unicode_frame = (
-                high_res_image_to_unicode(frame, new_width=width)
+                high_res_image_to_unicode(frame_rgb, new_width=width)
                 if high_resolution else
-                image_to_unicode(frame, colored=True, new_width=width)
+                image_to_unicode(frame_rgb, colored=True, new_width=width)
             )
         else:
-            unicode_frame = image_to_unicode(frame, colored=False, new_width=width)
+            unicode_frame = image_to_unicode(frame_rgb, colored=False, new_width=width)
         
         if first_frame:
             os.system('cls' if os.name == 'nt' else 'clear')
@@ -168,7 +173,7 @@ def url_to_unicode(url, width=80, frame_rate=24, colored=True, high_resolution=F
         progress_bar(current_frame, frame_count, width, play_icon='▎▎')
         
         # Sleep to match the desired frame rate
-        time.sleep(1 / frame_count)
+        time.sleep(1 / frame_rate)
     
     cap.release()  # Release the video capture object
     sys.stdout.write('\033[?25h')  # Show the cursor again
@@ -191,6 +196,23 @@ def handle_online_image(url, width, colored, high_res):
     ascii_art = high_res_image_to_unicode(frame, width) if high_res else image_to_unicode(frame, colored, width)
     os.remove("online_image")
     return ascii_art
+
+def get_video_info(url):
+    ydl_opts = {
+        'quiet': True,  # Suppress the output
+        'no_warnings': True,  # Suppress warnings
+        'noplaylist': True,  # Only process the single video, not a playlist
+        'format': '133+139'  # 136: 720p video, 140: AAC audio
+    }
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=False)
+        best_format = info['formats'][-1]  # Get the selected format
+        video_url = best_format['url']  
+        fps = best_format.get('fps', 'N/A')  # Default to 'N/A' if fps is not found
+
+        return video_url, fps
+
+
 def main():
     
     signal.signal(signal.SIGINT, handleSignal)
@@ -206,7 +228,9 @@ def main():
     try:
         colored = not args.grayscale
         high_res = args.high_resolution
-        is_url = args.input_path.startswith('http://') or args.input_path.startswith('https://')
+        # is_url = args.input_path.startswith('http://') or args.input_path.startswith('https://')
+        is_url = bool(re.match(r'https?://\S+', args.input_path))
+
         is_image = args.input_path.endswith(tuple(Image.registered_extensions().keys()))
         if args.grayscale and args.high_resolution:
             print("Error: High resolution rendering is not compatible with grayscale mode.")
@@ -221,7 +245,15 @@ def main():
                 
             else:
                 
-                url_to_unicode(args.input_path, width=args.width, colored=colored, high_resolution=high_res)
+                if 'youtu' in args.input_path:
+                    yt_url, fps = get_video_info(args.input_path)
+                    
+                    if fps != 'N/A':
+                        url_to_unicode(yt_url, width=args.width, colored=colored, frame_rate=int(fps), high_resolution=high_res)
+                    else:
+                        url_to_unicode(yt_url, width=args.width, colored=colored, high_resolution=high_res)
+                else:
+                    url_to_unicode(args.input_path, width=args.width, colored=colored, high_resolution=high_res)
 
         else:
             # Local file
