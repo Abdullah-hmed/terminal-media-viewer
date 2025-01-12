@@ -15,6 +15,7 @@ setup(
         'imageio-ffmpeg',
         'numpy',
         'argparse',
+        'opencv-python',
     ],
     author="Abdullah Ahmed",
     description="python script to view media files in terminal as unicode/ascii art",
