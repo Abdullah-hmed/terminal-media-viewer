@@ -29,7 +29,7 @@ Replace <media_file> with the path to the media file you want to view.
 | -w, --width | Width of the ASCII art (default: 80) |
 | -bw, --black-white | Color the image (default: false) |
 | -hr, --high-resolution | High resolution rendering (default: false) |
-
+| -yt, --youtube-search | Search for a YouTube video (default: false) |
 
 # Example
 To view a video file called example.mp4, run the following command:
@@ -43,6 +43,9 @@ With Arguments:
 mediaviewer -w 100 example.mp4  # Will set video width to 100
 mediaviewer -bw example.mp4   # Will play the video in the terminal using unicode blocks
 mediaviewer -hr example.mp4   # Will play the video in the terminal in high resolution
+mediaviewer https://example.com/video.mp4  # Will play the video from a URL
+mediaviewer https://example.com/image.jpg  # Will display the image from a URL
+mediaviewer -yt "Example Video"  # Will search for a video on YouTube
 ```
 
 # License

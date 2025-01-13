@@ -125,7 +125,7 @@ def video_to_unicode(video_path, width=80, frame_rate=24, colored=True, high_res
         
     sys.stdout.write('\033[?25h') # Show cursor again
 
-def url_to_unicode(url, width=80, frame_rate=24, colored=True, high_resolution=False):
+def url_to_unicode(url, width=80, colored=True, high_resolution=False):
     
     sys.stdout.write('\033[?25l')  # Hide the cursor
 
@@ -171,16 +171,16 @@ def url_to_unicode(url, width=80, frame_rate=24, colored=True, high_resolution=F
         
         current_frame += 1
         progress_bar(current_frame, frame_count, width, play_icon='▎▎')
-        
+            
         # Sleep to match the desired frame rate
-        time.sleep(1 / frame_rate)
+        time.sleep(1 / fps)
     
     cap.release()  # Release the video capture object
     sys.stdout.write('\033[?25h')  # Show the cursor again
 
 
 def progress_bar(current, total, bar_length, play_icon='▎▎'):
-    bar_length = int(bar_length) - 10
+    bar_length = int(bar_length) - 12
     filled_length = int(round(bar_length * current / float(total)))
     bar = '█' * filled_length + '-' * (bar_length - filled_length)
     print(f'\n {play_icon} |{bar}| {current}/{total}', end='')
@@ -202,16 +202,27 @@ def get_video_info(url):
         'quiet': True,  # Suppress the output
         'no_warnings': True,  # Suppress warnings
         'noplaylist': True,  # Only process the single video, not a playlist
-        'format': '133+139'  # 136: 720p video, 140: AAC audio
+        'format': 'mp4[ext=mp4]/mp4'
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
-        best_format = info['formats'][-1]  # Get the selected format
-        video_url = best_format['url']  
-        fps = best_format.get('fps', 'N/A')  # Default to 'N/A' if fps is not found
-
+        video_url = info.get('url', 'N/A')  # Fallback to 'N/A'
+        fps = info.get('fps', 'N/A')  # Fallback to 'N/A'
         return video_url, fps
 
+def get_top_video_link(query):
+    ydl_opts = {
+        'quiet': True,
+        'noplaylist': True,
+        'default_search': 'ytsearch',
+        'max_downloads': 1,
+    }
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        result = ydl.extract_info(f"ytsearch:{query}", download=False)
+        if 'entries' in result and len(result['entries']) > 0:
+            top_video = result['entries'][0]
+            return top_video['title'], top_video['webpage_url']
+    return None, None
 
 def main():
     
@@ -222,19 +233,32 @@ def main():
     parser.add_argument('-w', '--width', type=int, default=80, help='Width of the ASCII art (default: 80)')
     parser.add_argument('-bw', '--black-white', dest='grayscale', action='store_true', help='Display media as grayscale')
     parser.add_argument('-hr', '--high-resolution', dest='high_resolution', action='store_true', help='High resolution rendering')
+    parser.add_argument('-yt', '--youtube', dest='youtube_search', action='store_true', help='Search a YouTube video')
 
     args = parser.parse_args()
 
     try:
         colored = not args.grayscale
         high_res = args.high_resolution
-        # is_url = args.input_path.startswith('http://') or args.input_path.startswith('https://')
+        is_youtube_query = args.youtube_search
         is_url = bool(re.match(r'https?://\S+', args.input_path))
-
         is_image = args.input_path.endswith(tuple(Image.registered_extensions().keys()))
+        
+        
         if args.grayscale and args.high_resolution:
             print("Error: High resolution rendering is not compatible with grayscale mode.")
             sys.exit(1)
+
+        elif is_youtube_query:
+            title, url = get_top_video_link(args.input_path)
+            if url:
+                yt_url, fps = get_video_info(url)
+                print('Playing: ', title)
+
+                url_to_unicode(yt_url, width=args.width, colored=colored, high_resolution=high_res)
+                
+            else:
+                print("No videos found.")
 
         elif is_url:
             # URL
@@ -247,11 +271,8 @@ def main():
                 
                 if 'youtu' in args.input_path:
                     yt_url, fps = get_video_info(args.input_path)
-                    
-                    if fps != 'N/A':
-                        url_to_unicode(yt_url, width=args.width, colored=colored, frame_rate=int(fps), high_resolution=high_res)
-                    else:
-                        url_to_unicode(yt_url, width=args.width, colored=colored, high_resolution=high_res)
+                    print('FPS: ', fps)
+                    url_to_unicode(yt_url, width=args.width, colored=colored, high_resolution=high_res)
                 else:
                     url_to_unicode(args.input_path, width=args.width, colored=colored, high_resolution=high_res)
 
