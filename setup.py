@@ -15,8 +15,8 @@ setup(
         'imageio-ffmpeg',
         'numpy',
         'argparse',
-        'opencv-python',
-        'yt-dlp'
+        'opencv-python==4.10.0.84',
+        'yt-dlp==2024.12.23'
     ],
     author="Abdullah Ahmed",
     description="python script to view media files in terminal as unicode/ascii art",
