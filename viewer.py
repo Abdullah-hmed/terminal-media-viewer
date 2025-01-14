@@ -9,7 +9,7 @@ import cv2
 import yt_dlp
 import re
 import urllib.request
-
+from utils import Spinner
 
 ascii_chars = ' ▁▂▃▄▅▆▇█'
 media_playing = True
@@ -236,7 +236,8 @@ def main():
     parser.add_argument('-yt', '--youtube', dest='youtube_search', action='store_true', help='Search a YouTube video')
 
     args = parser.parse_args()
-
+    spinner = Spinner()
+    spinner.start()
     try:
         colored = not args.grayscale
         high_res = args.high_resolution
@@ -254,7 +255,7 @@ def main():
             if url:
                 yt_url, fps = get_video_info(url)
                 print('Playing: ', title)
-
+                spinner.stop()
                 url_to_unicode(yt_url, width=args.width, colored=colored, high_resolution=high_res)
                 
             else:
@@ -263,7 +264,7 @@ def main():
         elif is_url:
             # URL
             if is_image:
-                
+                spinner.stop()
                 image = handle_online_image(args.input_path, args.width, colored, high_res)
                 print(image)
                 
@@ -272,8 +273,10 @@ def main():
                 if 'youtu' in args.input_path:
                     yt_url, fps = get_video_info(args.input_path)
                     print('FPS: ', fps)
+                    spinner.stop()
                     url_to_unicode(yt_url, width=args.width, colored=colored, high_resolution=high_res)
                 else:
+                    spinner.stop()
                     url_to_unicode(args.input_path, width=args.width, colored=colored, high_resolution=high_res)
 
         else:
