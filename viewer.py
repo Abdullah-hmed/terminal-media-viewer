@@ -264,8 +264,9 @@ def main():
         elif is_url:
             # URL
             if is_image:
-                spinner.stop()
+                
                 image = handle_online_image(args.input_path, args.width, colored, high_res)
+                spinner.stop()
                 print(image)
                 
             else:
