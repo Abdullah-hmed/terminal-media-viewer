@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name="terminal-media-viewer",
     version="1.0.0",
-    py_modules=["viewer"],
+    py_modules=["viewer", "utils"],
     entry_points={
         "console_scripts": [
             "mediaviewer=viewer:main",
